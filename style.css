@@ -434,6 +434,7 @@ body {
   height: 100px;
   cursor: pointer;
   user-select: none;
+  color: var(--text-main);
   transition: var(--transition-smooth);
 }
 
@@ -456,6 +457,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   width: 80%;
+  color: var(--text-main);
 }
 
 .speaker-key {

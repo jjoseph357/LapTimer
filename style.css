@@ -381,6 +381,40 @@ body {
   box-shadow: 0 0 15px rgba(79, 70, 229, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
+.suggestions-list-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: rgba(15, 17, 26, 0.98);
+  border: 1px solid var(--border-color-active);
+  border-radius: var(--border-radius-md);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.suggestion-item {
+  padding: 12px 16px;
+  color: var(--text-main);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover, .suggestion-item.highlighted {
+  background: var(--primary);
+  color: #ffffff;
+}
+
 .speaker-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

@@ -55,7 +55,7 @@ const dom = {
   speakerGrid: document.getElementById('speaker-grid-container'),
   btnDeadSpace: document.getElementById('btn-dead-space'),
   quickAddInput: document.getElementById('quick-add-input'),
-  rosterSuggestions: document.getElementById('roster-suggestions'),
+  customSuggestionsList: document.getElementById('custom-suggestions-list'),
   
   // Side Panels / Modals
   btnSettingsToggle: document.getElementById('btn-settings-toggle'),
@@ -141,21 +141,59 @@ function loadDataFromStorage() {
   }
 }
 
-function updateRosterSuggestions() {
-  dom.rosterSuggestions.innerHTML = '';
-  // Suggest pool speakers that are not already active in the grid
-  const activeNames = new Set(state.speakers.map(s => s.name.toLowerCase()));
+let filteredSuggestionsList = [];
+let highlightedSuggestionIndex = -1;
+
+function updateRosterSuggestions(query = '') {
+  dom.customSuggestionsList.innerHTML = '';
+  highlightedSuggestionIndex = -1;
   
-  state.speakerPool.forEach(name => {
-    if (!activeNames.has(name.toLowerCase())) {
-      const option = document.createElement('option');
-      option.value = name;
-      dom.rosterSuggestions.appendChild(option);
-    }
+  const activeNames = new Set(state.speakers.map(s => s.name.toLowerCase()));
+  const searchVal = query.toLowerCase().trim();
+  
+  // Filter items in the pool that are not active, and match search prefix/substring
+  const matches = state.speakerPool.filter(name => {
+    const notActive = !activeNames.has(name.toLowerCase());
+    const matchesQuery = name.toLowerCase().includes(searchVal);
+    return notActive && (searchVal === '' || matchesQuery);
   });
+  
+  // Slice to max 8 suggestions to keep UI clean and compact
+  filteredSuggestionsList = matches.slice(0, 8);
+  
+  if (filteredSuggestionsList.length === 0 || searchVal === '') {
+    dom.customSuggestionsList.classList.add('hidden');
+    return;
+  }
+  
+  filteredSuggestionsList.forEach((name, index) => {
+    const div = document.createElement('div');
+    div.className = 'suggestion-item';
+    div.textContent = name;
+    div.setAttribute('data-index', index);
+    
+    div.addEventListener('click', () => {
+      selectSuggestion(name);
+    });
+    
+    dom.customSuggestionsList.appendChild(div);
+  });
+  
+  dom.customSuggestionsList.classList.remove('hidden');
 
   // Sync textarea value with current pool
   dom.bulkRosterInput.value = state.speakerPool.join(', ');
+}
+
+function selectSuggestion(name) {
+  const existing = state.speakers.find(s => s.name.toLowerCase() === name.toLowerCase());
+  if (existing) {
+    handleSpeakerSelection(existing.id);
+  } else {
+    addSpeaker(name, true);
+  }
+  dom.quickAddInput.value = '';
+  dom.customSuggestionsList.classList.add('hidden');
 }
 
 // --- UI / Component Setup ---
@@ -852,37 +890,79 @@ function setupEventListeners() {
   });
 
   // Quick Add / Quick Switch Input Handling
+  dom.quickAddInput.addEventListener('input', (e) => {
+    updateRosterSuggestions(e.target.value);
+  });
+
+  dom.quickAddInput.addEventListener('focus', (e) => {
+    updateRosterSuggestions(e.target.value);
+  });
+
+  dom.quickAddInput.addEventListener('blur', () => {
+    // Timeout allows clicking a suggestion to trigger selectSuggestion() before container hides
+    setTimeout(() => {
+      dom.customSuggestionsList.classList.add('hidden');
+    }, 200);
+  });
+
   dom.quickAddInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
+    const items = dom.customSuggestionsList.children;
+    
+    if (e.key === 'ArrowDown') {
       e.preventDefault();
-      const val = dom.quickAddInput.value.trim();
-      if (!val) return;
-
-      // Check if speaker already active in the grid (case-insensitive)
-      const existing = state.speakers.find(s => s.name.toLowerCase() === val.toLowerCase());
+      if (items.length === 0) return;
+      highlightedSuggestionIndex = (highlightedSuggestionIndex + 1) % items.length;
+      updateSuggestionHighlight(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (items.length === 0) return;
+      highlightedSuggestionIndex = (highlightedSuggestionIndex - 1 + items.length) % items.length;
+      updateSuggestionHighlight(items);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
       
-      if (existing) {
-        // Just switch to them
-        handleSpeakerSelection(existing.id);
+      // If a suggestion from the list is highlighted, select that instead of the raw typed text
+      if (highlightedSuggestionIndex >= 0 && highlightedSuggestionIndex < filteredSuggestionsList.length) {
+        selectSuggestion(filteredSuggestionsList[highlightedSuggestionIndex]);
       } else {
-        // Add as a new active speaker and switch to them immediately
-        addSpeaker(val, true);
+        const val = dom.quickAddInput.value.trim();
+        if (!val) return;
 
-        // Also add to pool if not present, so they are saved for future autocomplete suggestions
-        const inPool = state.speakerPool.some(name => name.toLowerCase() === val.toLowerCase());
-        if (!inPool) {
-          state.speakerPool.push(val);
-          saveDataToStorage();
+        // Check if speaker already active in the grid (case-insensitive)
+        const existing = state.speakers.find(s => s.name.toLowerCase() === val.toLowerCase());
+        
+        if (existing) {
+          handleSpeakerSelection(existing.id);
+        } else {
+          addSpeaker(val, true);
+
+          const inPool = state.speakerPool.some(name => name.toLowerCase() === val.toLowerCase());
+          if (!inPool) {
+            state.speakerPool.push(val);
+            saveDataToStorage();
+          }
         }
+        
+        dom.quickAddInput.value = '';
+        updateRosterSuggestions();
       }
-      
-      dom.quickAddInput.value = '';
-      updateRosterSuggestions();
     } else if (e.key === 'Escape') {
-      // Blur the input to re-enable general keyboard hotkeys
       dom.quickAddInput.blur();
+      dom.customSuggestionsList.classList.add('hidden');
     }
   });
+
+  function updateSuggestionHighlight(items) {
+    for (let i = 0; i < items.length; i++) {
+      if (i === highlightedSuggestionIndex) {
+        items[i].classList.add('highlighted');
+        // Scroll highlight into view if scrollable
+        items[i].scrollIntoView({ block: 'nearest' });
+      } else {
+        items[i].classList.remove('highlighted');
+      }
+    }
+  }
 
   // Bulk Import Pool
   dom.btnImportRoster.addEventListener('click', () => {

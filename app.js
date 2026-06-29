@@ -286,7 +286,7 @@ function renderSpeakerSettingsList() {
 // Haptic vibration feedback
 function triggerHaptic() {
   if (navigator.vibrate) {
-    navigator.vibrate(30);
+    navigator.vibrate(10); // Standard light tap haptic duration (10ms)
   }
 }
 

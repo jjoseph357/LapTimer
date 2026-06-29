@@ -12,10 +12,12 @@ const PRESET_COLORS = [
 ];
 
 const DEFAULT_SPEAKERS = [
-  { id: 'sp-1', name: 'Alice', color: '#6366f1', rgb: '99, 102, 241', totalTime: 0, key: 1 },
-  { id: 'sp-2', name: 'Bob', color: '#10b981', rgb: '16, 185, 129', totalTime: 0, key: 2 },
-  { id: 'sp-3', name: 'Charlie', color: '#f59e0b', rgb: '245, 158, 11', totalTime: 0, key: 3 },
-  { id: 'sp-4', name: 'Diana', color: '#ec4899', rgb: '236, 72, 153', totalTime: 0, key: 4 }
+  { id: 'sp-1', name: 'Daniel', color: '#6366f1', rgb: '99, 102, 241', totalTime: 0, key: 1 },
+  { id: 'sp-2', name: 'Ogie', color: '#10b981', rgb: '16, 185, 129', totalTime: 0, key: 2 },
+  { id: 'sp-3', name: 'Clem', color: '#f59e0b', rgb: '245, 158, 11', totalTime: 0, key: 3 },
+  { id: 'sp-4', name: 'Joaquin', color: '#ec4899', rgb: '236, 72, 153', totalTime: 0, key: 4 },
+  { id: 'sp-5', name: 'Rozel', color: '#3b82f6', rgb: '59, 130, 246', totalTime: 0, key: 5 },
+  { id: 'sp-6', name: 'Marcus', color: '#8b5cf6', rgb: '139, 92, 246', totalTime: 0, key: 6 }
 ];
 
 // --- App State ---
@@ -113,8 +115,11 @@ function saveDataToStorage() {
 
 function loadDataFromStorage() {
   const storedSpeakers = localStorage.getItem('laptimer_speakers');
-  if (storedSpeakers) {
+  if (storedSpeakers && !storedSpeakers.includes('Alice')) {
     state.speakers = JSON.parse(storedSpeakers);
+  } else {
+    state.speakers = [...DEFAULT_SPEAKERS];
+    localStorage.setItem('laptimer_speakers', JSON.stringify(state.speakers));
   }
   
   const storedHistory = localStorage.getItem('laptimer_history');
@@ -123,11 +128,16 @@ function loadDataFromStorage() {
   }
 
   const storedPool = localStorage.getItem('laptimer_speaker_pool');
-  if (storedPool) {
+  if (storedPool && !storedPool.includes('Alice')) {
     state.speakerPool = JSON.parse(storedPool);
   } else {
-    // Default pool of names to get started
-    state.speakerPool = ['Alice', 'Bob', 'Charlie', 'Diana', 'Emma', 'Frank', 'George', 'Hannah', 'Ian', 'Julia'];
+    // Default pool requested by the user
+    state.speakerPool = [
+      'Daniel', 'Ogie', 'Clem', 'Joaquin', 'Rozel', 'Marcus', 'Minerva', 
+      'Chui', 'Johnson', 'Johnny', 'Nikaio', 'Jesse', 'Jeremi', 'Jasper', 
+      'Janie', 'Paula', 'Alexander', 'Victor', 'Virginia', 'Ella', 'Liezl', 'Annie'
+    ];
+    localStorage.setItem('laptimer_speaker_pool', JSON.stringify(state.speakerPool));
   }
 }
 

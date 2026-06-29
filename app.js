@@ -117,6 +117,8 @@ function loadDataFromStorage() {
   const storedSpeakers = localStorage.getItem('laptimer_speakers');
   if (storedSpeakers && !storedSpeakers.includes('Alice')) {
     state.speakers = JSON.parse(storedSpeakers);
+    // Reset any accumulated times from previous saves on startup
+    state.speakers.forEach(s => s.totalTime = 0);
   } else {
     state.speakers = [...DEFAULT_SPEAKERS];
     localStorage.setItem('laptimer_speakers', JSON.stringify(state.speakers));
@@ -479,33 +481,37 @@ function tick() {
   }
 }
 
+function clearSessionTimers() {
+  clearInterval(timerInterval);
+  
+  state.sessionState = 'ready';
+  state.totalDuration = 0;
+  state.deadSpaceDuration = 0;
+  state.turns = [];
+  state.activeSpeakerId = null;
+  
+  state.speakers.forEach(s => s.totalTime = 0);
+  
+  // UI resets
+  dom.totalTime.textContent = '00:00.00';
+  dom.currentTurnTime.textContent = '00:00.00';
+  dom.deadSpaceTimer.textContent = '00:00.00';
+  
+  dom.btnStartPause.querySelector('.btn-text').textContent = 'Start';
+  dom.btnStartPause.querySelector('.icon-play').classList.remove('hidden');
+  dom.btnStartPause.querySelector('.icon-pause').classList.add('hidden');
+  dom.btnReset.disabled = true;
+  dom.btnSaveSession.disabled = true;
+  dom.statusBadge.innerHTML = '<span class="pulse-dot"></span> Ready';
+  dom.statusBadge.className = 'status-indicator';
+  
+  renderSpeakerGrid();
+  updateStats();
+}
+
 function resetSession() {
   if (confirm('Are you sure you want to reset the current session? Unsaved timers will be lost.')) {
-    clearInterval(timerInterval);
-    
-    state.sessionState = 'ready';
-    state.totalDuration = 0;
-    state.deadSpaceDuration = 0;
-    state.turns = [];
-    state.activeSpeakerId = null;
-    
-    state.speakers.forEach(s => s.totalTime = 0);
-    
-    // UI resets
-    dom.totalTime.textContent = '00:00.00';
-    dom.currentTurnTime.textContent = '00:00.00';
-    dom.deadSpaceTimer.textContent = '00:00.00';
-    
-    dom.btnStartPause.querySelector('.btn-text').textContent = 'Start';
-    dom.btnStartPause.querySelector('.icon-play').classList.remove('hidden');
-    dom.btnStartPause.querySelector('.icon-pause').classList.add('hidden');
-    dom.btnReset.disabled = true;
-    dom.btnSaveSession.disabled = true;
-    dom.statusBadge.innerHTML = '<span class="pulse-dot"></span> Ready';
-    dom.statusBadge.className = 'status-indicator';
-    
-    renderSpeakerGrid();
-    updateStats();
+    clearSessionTimers();
     triggerHaptic();
   }
 }
@@ -656,6 +662,9 @@ function saveSession() {
   renderHistory();
   
   alert('Session saved successfully!');
+  
+  // Clear active timers to prepare for next session
+  clearSessionTimers();
   
   // Show history overlay
   openPanel(dom.historyPanel);

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LapTimer - Fast Speech & Silence Tracker</title>
+  <!-- SEO & Social Meta Tags -->
+  <meta name="description" content="A high-performance lap timer for group speaking sessions, tracking speech vs. dead space with instant tap controls.">
+  <meta name="theme-color" content="#0d0e12">
+  
+  <!-- Premium Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <span class="logo-icon">⏱️</span>
+        <h1>LapTimer</h1>
+      </div>
+      <div class="header-actions">
+        <button id="btn-history-toggle" class="btn icon-btn" title="View History" aria-label="View history">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </button>
+        <button id="btn-settings-toggle" class="btn icon-btn" title="Speaker Settings" aria-label="Manage speakers">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Dash Dashboard Grid -->
+    <main class="dashboard">
+      <!-- Section 1: Dynamic Timers and Controls -->
+      <section class="session-tracker-card glass-panel">
+        <div class="session-title-bar">
+          <input type="text" id="session-name" value="Speaking Session" placeholder="Session Name" aria-label="Session Name">
+          <div class="status-indicator" id="status-badge"><span class="pulse-dot"></span> Ready</div>
+        </div>
+        
+        <div class="timer-display-group">
+          <div class="timer-item main-timer">
+            <span class="timer-label">Total Time</span>
+            <div id="total-time" class="timer-value">00:00.00</div>
+          </div>
+          <div class="timer-item active-turn-timer">
+            <span class="timer-label">Current Turn</span>
+            <div id="current-turn-time" class="timer-value">00:00.00</div>
+          </div>
+        </div>
+
+        <div class="session-controls">
+          <button id="btn-start-pause" class="btn btn-primary" title="Start or Pause (Shortcut: Space)">
+            <svg class="icon-play" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <svg class="icon-pause hidden" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            <span class="btn-text">Start</span>
+          </button>
+          <button id="btn-reset" class="btn btn-secondary" disabled title="Reset timer to 0">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            <span>Reset</span>
+          </button>
+          <button id="btn-save-session" class="btn btn-accent" disabled title="Save session to history">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span>Save</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Section 2: Fast Tapping Grid -->
+      <section class="speaker-selection-section">
+        <h2 class="section-title">Who is speaking? <span class="sub-label">Tap to switch active speaker</span></h2>
+        
+        <div class="quick-input-group">
+          <input type="text" id="quick-add-input" list="roster-suggestions" placeholder="Type name to switch or add..." autocomplete="off" aria-label="Quick add or switch speaker">
+          <datalist id="roster-suggestions"></datalist>
+        </div>
+        
+        <div class="speaker-grid" id="speaker-grid-container">
+          <!-- Populated by JavaScript -->
+        </div>
+
+        <button id="btn-dead-space" class="btn btn-dead-space active-speaker" title="Record silence / dead space (Shortcut: 0)">
+          <div class="dead-space-inner">
+            <span class="dead-space-shortcut">0</span>
+            <div class="dead-space-text">
+              <span class="title">Dead Space / Silence</span>
+              <span class="time-subtext" id="dead-space-timer">00:00.00</span>
+            </div>
+            <span class="active-pulse"></span>
+          </div>
+        </button>
+      </section>
+
+      <!-- Section 3: Live Stats Visuals -->
+      <section class="stats-card glass-panel" id="live-stats-panel">
+        <h2 class="section-title">Live Session Statistics</h2>
+        <div class="stats-layout">
+          <div class="chart-container">
+            <div class="donut-chart" id="stats-donut-chart">
+              <div class="donut-hole">
+                <div class="donut-center-text">
+                  <span class="donut-num" id="stat-total-speakers">0</span>
+                  <span class="donut-label">Speakers</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="stats-breakdown" id="stats-breakdown-list">
+            <!-- Populated by JavaScript -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Slide-over panels (Modals) -->
+    
+    <!-- Speaker settings panel -->
+    <div id="settings-panel" class="side-panel">
+      <div class="panel-header">
+        <h2>Manage Speakers</h2>
+        <button id="btn-close-settings" class="btn icon-btn" aria-label="Close settings">
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="panel-content">
+        <form id="add-speaker-form" class="panel-form">
+          <div class="form-group">
+            <label for="new-speaker-name">Add New Speaker</label>
+            <div class="input-action-group">
+              <input type="text" id="new-speaker-name" placeholder="Speaker Name..." required maxlength="20">
+              <button type="submit" class="btn btn-primary-small">Add</button>
+            </div>
+          </div>
+          <div class="form-group color-presets">
+            <label>Speaker Accent Color</label>
+            <div class="color-picker-grid" id="color-presets-container">
+              <!-- JS Populates this with color options -->
+            </div>
+          </div>
+        </form>
+
+        <hr class="panel-divider">
+
+        <!-- Bulk Roster Import -->
+        <div class="form-group">
+          <label for="bulk-roster-input">Bulk Import Speaker Pool (40+ Names)</label>
+          <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Enter names separated by commas or newlines.</p>
+          <textarea id="bulk-roster-input" rows="4" placeholder="Alice, Bob, Charlie, David, Emma..." style="background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--border-radius-md); padding:10px; color:white; font-family:var(--font-sans); font-size:0.9rem; resize:none; outline:none;"></textarea>
+          <button id="btn-import-roster" class="btn btn-secondary" style="margin-top:4px;">Save Speaker Pool</button>
+        </div>
+
+        <hr class="panel-divider">
+
+        <h3>Active Grid List</h3>
+        <div class="speaker-list" id="managed-speakers-list">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- History Panel -->
+    <div id="history-panel" class="side-panel">
+      <div class="panel-header">
+        <h2>Session History</h2>
+        <button id="btn-close-history" class="btn icon-btn" aria-label="Close history">
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="panel-content">
+        <div class="history-actions">
+          <button id="btn-clear-history" class="btn btn-secondary-danger">Clear All History</button>
+        </div>
+        <div class="history-list" id="session-history-container">
+          <!-- Populated by JS -->
+          <div class="empty-state">No saved sessions yet. Record one above!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export / Share Overlay Modal -->
+    <div id="export-modal" class="modal-overlay hidden">
+      <div class="modal-content glass-panel">
+        <div class="modal-header">
+          <h2>Export Session Results</h2>
+          <button id="btn-close-export" class="btn icon-btn" aria-label="Close modal">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="export-session-meta">Save your timed data for spreadsheet modeling or backup archives.</p>
+          <div class="export-actions-row">
+            <button id="btn-export-csv" class="btn btn-export">
+              <span class="icon">📊</span>
+              <span class="title">Export CSV</span>
+              <span class="desc">For Excel / Google Sheets</span>
+            </button>
+            <button id="btn-export-json" class="btn btn-export">
+              <span class="icon">📦</span>
+              <span class="title">Export JSON</span>
+              <span class="desc">Raw database format</span>
+            </button>
+          </div>
+          <div class="copy-field-container">
+            <label for="copy-text-area">Quick Summary Clipboard</label>
+            <textarea id="copy-text-area" readonly rows="5"></textarea>
+            <button id="btn-copy-clipboard" class="btn btn-secondary">Copy Summary</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dimmer-overlay" id="dimmer"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

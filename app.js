@@ -572,9 +572,10 @@ function removeSpeaker(id) {
 function updateStats() {
   const total = state.totalDuration || 0;
   
-  // Calculate active speaker count
+  // Calculate active vs total grid speakers count
   const nonZeroSpeakers = state.speakers.filter(s => s.totalTime > 0).length;
-  dom.statTotalSpeakers.textContent = nonZeroSpeakers;
+  const totalGridSpeakers = state.speakers.length;
+  dom.statTotalSpeakers.textContent = `${nonZeroSpeakers}/${totalGridSpeakers}`;
   
   // Prepare breakdown elements
   dom.statsBreakdownList.innerHTML = '';
@@ -635,6 +636,8 @@ function saveSession() {
   if (state.totalDuration === 0) return;
   
   const title = dom.sessionName.value.trim() || 'Timed Session';
+  const activeCount = state.speakers.filter(s => s.totalTime > 0).length;
+  const totalCount = state.speakers.length;
   
   const sessionRecord = {
     id: `session-${Date.now()}`,
@@ -642,6 +645,8 @@ function saveSession() {
     date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
     totalDuration: state.totalDuration,
     deadSpaceDuration: state.deadSpaceDuration,
+    activeSpeakersCount: activeCount,
+    totalSpeakersCount: totalCount,
     speakers: state.speakers.map(s => ({ name: s.name, color: s.color, totalTime: s.totalTime })),
     turns: state.turns.map(t => ({ name: t.name, duration: t.duration }))
   };
@@ -715,12 +720,16 @@ function loadHistoricalSession(sessionId) {
   // Open Export/Stats Modal & configure content
   dom.exportSessionMeta.textContent = `Stats breakdown for "${session.title}" (Recorded ${session.date})`;
   
+  const activeCount = session.activeSpeakersCount || session.speakers.filter(s => s.totalTime > 0).length;
+  const totalCount = session.totalSpeakersCount || session.speakers.length;
+  
   // Format quick summaries
   let summary = `LapTimer Session Summary\n`;
   summary += `Title: ${session.title}\n`;
   summary += `Date: ${session.date}\n`;
   summary += `Total Duration: ${formatTime(session.totalDuration, true)}\n`;
   summary += `Dead Space: ${formatTime(session.deadSpaceDuration, true)} (${Math.round((session.deadSpaceDuration / session.totalDuration) * 100)}%)\n`;
+  summary += `Speakers: ${activeCount} active / ${totalCount} total\n`;
   summary += `-------------------------------\n`;
   
   session.speakers.forEach(s => {
@@ -748,9 +757,14 @@ function downloadCSV(session) {
     csv += `${idx + 1},"${turn.name.replace(/"/g, '""')}",${Math.round(turn.duration)},"${formatTime(turn.duration, true)}",${pct.toFixed(1)}%\n`;
   });
   
+  const activeCount = session.activeSpeakersCount || session.speakers.filter(s => s.totalTime > 0).length;
+  const totalCount = session.totalSpeakersCount || session.speakers.length;
+  
   csv += `\nSummary Stats\n`;
   csv += `Total Session Time,,${Math.round(session.totalDuration)},"${formatTime(session.totalDuration, true)}",100%\n`;
   csv += `Dead Space/Silence,,${Math.round(session.deadSpaceDuration)},"${formatTime(session.deadSpaceDuration, true)}",${((session.deadSpaceDuration / session.totalDuration) * 100).toFixed(1)}%\n`;
+  csv += `Active Speakers,,${activeCount},,${((activeCount / totalCount) * 100).toFixed(0)}%\n`;
+  csv += `Total Speakers,,${totalCount},,100%\n`;
   
   session.speakers.forEach(s => {
     csv += `Speaker: ${s.name},,${Math.round(s.totalTime)},"${formatTime(s.totalTime, true)}",${((s.totalTime / session.totalDuration) * 100).toFixed(1)}%\n`;
